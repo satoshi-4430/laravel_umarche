@@ -30,17 +30,19 @@
                 <div class="flex justify-end mb-4">
                   <button onclick="location.href='<?php echo e(route('owner.images.create')); ?>'" class="text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg">新規登録する</button>
                 </div>
+                <div class="flex flex-wrap">
+
                   <?php $__currentLoopData = $images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                   <div class="w-1/4 p-4">
                   <a href="<?php echo e(route('owner.images.edit',['image'=>$image->id])); ?>">
                     <div class="border rounded-md p-4">
                     <div class="text-xl"><?php echo e($image->title); ?></div>
                     <?php if (isset($component)) { $__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4 = $component; } ?>
-<?php $component = $__env->getContainer()->make(Illuminate\View\AnonymousComponent::class, ['view' => 'components.thumbnail','data' => ['filename' => $shop->filename,'type' => 'products']]); ?>
+<?php $component = $__env->getContainer()->make(Illuminate\View\AnonymousComponent::class, ['view' => 'components.thumbnail','data' => ['filename' => $image->filename,'type' => 'products']]); ?>
 <?php $component->withName('thumbnail'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php $component->withAttributes(['filename' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($shop->filename),'type' => 'products']); ?>
+<?php $component->withAttributes(['filename' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($image->filename),'type' => 'products']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__componentOriginalc254754b9d5db91d5165876f9d051922ca0066f4)): ?>
@@ -50,7 +52,8 @@
                   </div>
                     </a>
                   </div>
-                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                  <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>                              
+                </div>
                   <?php echo e($images->links()); ?>
 
               </div>
