@@ -4,12 +4,52 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Product;
+use App\Models\Stock;
+use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
 {
-    public function index()
+    public function __construct()
     {
-        return view('user.index');
+        $this->middleware('auth:users');
+
+        $this->middleware(function ($request, $next) {
+
+            $id = $request->route()->parameter('item'); 
+            if(!is_null($id)){ 
+            $itemId = Product::availableItems()->where('products.id', $id)->exists();
+                if(!$itemId){ 
+                    abort(404);
+                }
+            }
+            return $next($request);
+        });
+    }
+    
+
+    public function index(Request $request)
+    {
+        $products = Product::availableItems()
+        ->sortOrder($request->sort)
+        ->paginate($request->pagenation ?? '20');
+
+
+
+        return view('user.index', compact('products'));
+    }
+
+    public function show($id)
+    {
+        $product =Product::findOrFail($id);
+        $quantity = Stock::where('product_id', $product->id)
+        ->sum('quantity');
+
+        if($quantity > 9){ 
+            $quantity = 9; 
+        }
+
+        return view('user.show', compact('product','quantity'));
     }
     
 }
