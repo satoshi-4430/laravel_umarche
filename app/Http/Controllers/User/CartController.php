@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth; 
+use App\Models\Stock;
 
 class CartController extends Controller
 {
@@ -58,8 +59,6 @@ class CartController extends Controller
 
     public function checkout()
     {
-        
-
         $user = User::findOrFail(Auth::id());
         $products = $user->products;
         
@@ -94,7 +93,16 @@ class CartController extends Controller
 
         $session = \Stripe\Checkout\Session::create([
             'payment_method_types' => ['card'],
-            'line_items' => [$lineItems],
+            'line_items' => [[
+                'price_data' =>[
+                    'currency' => 'jpy',
+                    'unit_amount' => $product->price,
+                    'product_data' =>[
+                        'name' =>  $product->name,
+                ],
+            ],
+            'quantity' => $product->pivot->quantity,
+        ]],
             'mode' => 'payment',
             'success_url' => route('user.cart.success'),
             'cancel_url' => route('user.cart.cancel'),
@@ -104,5 +112,40 @@ class CartController extends Controller
 
         return view('user.checkout', 
             compact('session', 'publicKey'));
+    }
+
+    
+    public function success()
+    {
+        ////
+        $items = Cart::where('user_id', Auth::id())->get();
+        $products = CartService::getItemsInCart($items);
+        $user = User::findOrFail(Auth::id());
+
+        SendThanksMail::dispatch($products, $user);
+        foreach($products as $product)
+        {
+            SendOrderedMail::dispatch($product, $user);
+        }
+        // dd('ユーザーメール送信テスト');
+        ////
+        Cart::where('user_id', Auth::id())->delete();
+
+        return redirect()->route('user.items.index');
+    }
+
+    public function cancel()
+    {
+        $user = User::findOrFail(Auth::id());
+
+        foreach($user->products as $product){
+            Stock::create([
+                'product_id' => $product->id,
+                'type' => \Constant::PRODUCT_LIST['add'],
+                'quantity' => $product->pivot->quantity
+            ]);
+        }
+
+        return redirect()->route('user.cart.index');
     }
 }
